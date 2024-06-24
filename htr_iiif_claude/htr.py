@@ -69,3 +69,4 @@ def transcribe(
         )
         with open(output, "w") as f:
             f.write(y.text)
+        print(f"Done. Total cost was: {y.cost.get('total')}")

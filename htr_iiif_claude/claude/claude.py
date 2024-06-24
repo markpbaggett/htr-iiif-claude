@@ -10,7 +10,7 @@ class ClaudeRequest:
         self.client = self.__create_client(key)
         self.output = self.__request()
         self.cost = self.__determine_cost()
-        self.text = json.loads(self.output['content'][0]['text']).get('htr')
+        self.text = self.__get_htr_text()
 
     def __get_htr_text(self):
         try:
@@ -49,7 +49,10 @@ class ClaudeRequest:
         return json.loads(response.json())
 
     def __determine_cost(self):
+        input_cost = self.output['usage']['input_tokens'] / 1000000 * .25
+        output_cost = self.output['usage']['output_tokens'] / 1000000 * 1.25
         return {
-            'input': self.output['usage']['input_tokens'] / 1000000 * .25,
-            'output': self.output['usage']['output_tokens'] / 1000000 * 1.25
+            'input': input_cost,
+            'output': output_cost,
+            'total': input_cost + output_cost
         }
