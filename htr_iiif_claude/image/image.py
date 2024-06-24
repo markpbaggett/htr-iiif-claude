@@ -1,8 +1,6 @@
 import httpx
 import base64
 
-import requests
-
 
 class Image:
     def __init__(self, image_uri):

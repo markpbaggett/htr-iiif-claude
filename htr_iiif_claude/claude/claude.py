@@ -12,6 +12,13 @@ class ClaudeRequest:
         self.cost = self.__determine_cost()
         self.text = json.loads(self.output['content'][0]['text']).get('htr')
 
+    def __get_htr_text(self):
+        try:
+            text = json.loads(self.output['content'][0]['text'])
+            return text.get('htr', text)
+        except json.decoder.JSONDecodeError:
+            return self.output['content'][0]['text']
+
     @staticmethod
     def __create_client(apikey):
         return anthropic.Anthropic(
