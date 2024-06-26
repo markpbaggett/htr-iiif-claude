@@ -11,7 +11,12 @@ class Image:
 
     @staticmethod
     def __get_full_gray(url):
-        return f"{url.replace('/info.json', '')}/full/full/0/gray.jpg"
+        x = f"{url.replace('/info.json', '')}/full/full/0/gray.jpg"
+        size = len(httpx.get(x).content)
+        if size < 4000000:
+            return x
+        else:
+            return f"{url.replace('/info.json', '')}/full/pct:50/0/gray.jpg"
 
     @staticmethod
     def __convert(image_url):

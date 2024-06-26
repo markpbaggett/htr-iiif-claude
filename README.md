@@ -21,6 +21,10 @@ You can also install with pip but do some mindfully:
 pip install htr_iiif_claude
 ```
 
+## Configuring API Key
+
+Set API key as `CLAUDE_API`
+
 ## Running
 
 To transcribe a single IIIF image doc, just:

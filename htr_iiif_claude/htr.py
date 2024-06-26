@@ -3,6 +3,7 @@ from htr_iiif_claude.claude import ClaudeRequest
 from htr_iiif_claude.manifest import Manifest
 import os
 import click
+from tqdm import tqdm
 
 
 @click.group()
@@ -49,7 +50,8 @@ def transcribe(
     if manifest:
         iiif_manifest = Manifest(manifest)
         images = iiif_manifest.get_images()
-        for item in images:
+        total = 0.0
+        for item in tqdm(images):
             image = Image(image_uri=item)
             y = ClaudeRequest(
                 model=model,
@@ -57,8 +59,10 @@ def transcribe(
                 prompt=f'{prompt} Respond with the message as output in JSON format with keys: "htr" (string)',
                 image=image.hash
             )
-            with open(item.split('/')[-2], "w") as f:
+            with open(f"{output}/{item.split('/')[-2]}", "w") as f:
                 f.write(y.text)
+            total += y.cost.get('total')
+        print(f"Done. Total cost was: {total}")
     else:
         image = Image(image_uri=image_uri)
         y = ClaudeRequest(
