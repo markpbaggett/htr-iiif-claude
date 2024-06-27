@@ -49,8 +49,26 @@ class ClaudeRequest:
         return json.loads(response.json())
 
     def __determine_cost(self):
-        input_cost = self.output['usage']['input_tokens'] / 1000000 * .25
-        output_cost = self.output['usage']['output_tokens'] / 1000000 * 1.25
+        known_models = {
+            "claude-3-haiku-20240307": {
+                "input": .25,
+                "output": 1.25
+            },
+            "claude-3-5-sonnet-20240620": {
+                "input": 3.00,
+                "output": 15.00
+            },
+            "claude-3-sonnet-20240229": {
+                "input": 3.00,
+                "output": 15.00
+            },
+            "claude-3-opus-20240229": {
+                "input": 15.00,
+                "output": 75.00
+            }
+        }
+        input_cost = self.output['usage']['input_tokens'] / 1000000 * known_models[self.model]['input']
+        output_cost = self.output['usage']['output_tokens'] / 1000000 * known_models[self.model]['output']
         return {
             'input': input_cost,
             'output': output_cost,
