@@ -1,4 +1,7 @@
 import json
+
+import httpx
+
 from htr_iiif_claude.image import Image
 from htr_iiif_claude.claude import ClaudeRequest
 from htr_iiif_claude.manifest import Manifest
@@ -98,31 +101,36 @@ def describe_csv(model: str, output: str, csv: str, start: str, end: str) -> Non
             next(reader)
         for row in reader:
             if i <= total_images_to_get:
-                fields_that_matter = (
-                "Item title", "Creator", "Publisher", "Category", "Location", "Collection", "Title",
-                "Creator (Photographer)", "Year (Coverage)", "Description", "Note", "Descriptive Notes", "Caption",
-                "Subject", "Event", "Keywords", "Drawing Name")
-                metadata_elements = []
-                for field in fields_that_matter:
-                    if row[field] != "":
-                        metadata_elements.append(f"{field}: {row[field]}")
-                image = Image(image_uri_or_path=row['Item link'])
-                y = ClaudeRequest(
-                    model=model,
-                    key=os.getenv("CLAUDE_API"),
-                    prompt=f'Give this image a title and a description based on its contents. Respond with the message '
-                           f'as output in JSON format with keys "title", "description" and values '
-                           f'as str. The image has the following metadata: {",".join(metadata_elements)}',
-                    image=image.hash,
-                )
-                if type(y.text) == str:
-                    with open(f"{output}/{row['Item link'].split('/')[-1].split('.')[0]}.txt", "w") as f:
-                        f.write(y.text)
-                elif type(y.text) == dict:
-                    with open(f"{output}/{row['Item link'].split('/')[-1].split('.')[0]}.json", "w") as f:
-                        json.dump(y.text, f)
-                print(f"Done. Total cost was: {y.cost.get('total')}. Results written to {output}/{row['Item link'].split('/')[-1].split('.')[0]}")
-                i += 1
+                try:
+                    fields_that_matter = (
+                    "Item title", "Creator", "Publisher", "Category", "Location", "Collection", "Title",
+                    "Creator (Photographer)", "Year (Coverage)", "Description", "Note", "Descriptive Notes", "Caption",
+                    "Subject", "Event", "Keywords", "Drawing Name")
+                    metadata_elements = []
+                    for field in fields_that_matter:
+                        if row[field] != "":
+                            metadata_elements.append(f"{field}: {row[field]}")
+                    image = Image(image_uri_or_path=row['Medium Image'])
+                    y = ClaudeRequest(
+                        model=model,
+                        key=os.getenv("CLAUDE_API"),
+                        prompt=f'Give this image a title and a description based on its contents. Respond with the message '
+                               f'as output in JSON format with keys "title", "description" and values '
+                               f'as str. The image has the following metadata: {",".join(metadata_elements)}',
+                        image=image.hash,
+                    )
+                    if type(y.text) == str:
+                        json_data = json.loads(y.text)
+                        with open(f"{output}/{row['Item link'].split('/')[-1].split('.')[0]}.json", "w") as f:
+                            json.dump(json_data, f, indent=4)
+                    elif type(y.text) == dict:
+                        with open(f"{output}/{row['Item link'].split('/')[-1].split('.')[0]}.json", "w") as f:
+                            json.dump(y.text, f, indent=4)
+                    print(f"Done. Total cost was: {y.cost.get('total')}. Results written to {output}/{row['Item link'].split('/')[-1].split('.')[0]}")
+                    i += 1
+                except httpx.ReadTimeout as e:
+                    print(f"Read timed out: {row['Item link']}\n")
+                    i += 1
 
 
 @cli.command("transcribe", help="Transcribe an image with Claude")
