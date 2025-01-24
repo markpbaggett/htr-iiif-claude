@@ -120,9 +120,12 @@ def describe_csv(model: str, output: str, csv: str, start: str, end: str) -> Non
                         image=image.hash,
                     )
                     if type(y.text) == str:
-                        json_data = json.loads(y.text)
-                        with open(f"{output}/{row['Item link'].split('/')[-1].split('.')[0]}.json", "w") as f:
-                            json.dump(json_data, f, indent=4)
+                        try:
+                            json_data = json.loads(y.text)
+                            with open(f"{output}/{row['Item link'].split('/')[-1].split('.')[0]}.json", "w") as f:
+                                json.dump(json_data, f, indent=4)
+                        except json.decoder.JSONDecodeError:
+                            print(f"Couldn't convert string to json for {row['Item link']}\n")
                     elif type(y.text) == dict:
                         with open(f"{output}/{row['Item link'].split('/')[-1].split('.')[0]}.json", "w") as f:
                             json.dump(y.text, f, indent=4)
