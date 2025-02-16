@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "htr-iiif-claude"
-version = "0.1.2"
+version = "0.1.3"
 description = "Generate HTR from IIIF Resources"
 authors = ["Mark Baggett <markpbaggett@gmail.com>"]
 license = "MIT"

@@ -52,8 +52,8 @@ def describe(image_uri: str, prompt: str, metadata: str, model: str, output: str
     y = ClaudeRequest(
         model=model,
         key=os.getenv("CLAUDE_API"),
-        prompt=f'{prompt} Respond with the message as output in JSON format with keys "title", "description" and values '
-               f'as str. The image has the following metadata: {metadata}',
+        prompt=f'{prompt}'
+               f'The image has the following metadata: {metadata}',
         image=image.hash
     )
     if type(y.text) == str:
@@ -179,6 +179,7 @@ def describe_simple(model: str, output: str, csv: str, start: str, end: str, fie
     fields_that_matter = fields.split('|')
     total_images_to_get = int(end)
     os.makedirs(output, exist_ok=True)
+    results = []
     with open(csv, 'r') as csvfile:
         i = 0
         reader = DictReader(csvfile)
@@ -200,13 +201,18 @@ def describe_simple(model: str, output: str, csv: str, start: str, end: str, fie
                                f'as str. The image has the following metadata: {",".join(metadata_elements)}',
                         image=image.hash,
                     )
+                    current = row
                     if type(y.text) == str:
                         try:
                             json_data = json.loads(y.text)
                             with open(f"{output}/{row[image_location].split('/')[-1].split('.')[0]}.json", "w") as f:
                                 json.dump(json_data, f, indent=4)
+                            for k, v in json_data.items():
+                                current[k] = v
+                                results.append(current)
                         except json.decoder.JSONDecodeError:
                             print(f"Couldn't convert string to json for {row[image_location]}\n")
+
                     elif type(y.text) == dict:
                         with open(f"{output}/{row[image_location].split('/')[-1].split('.')[0]}.json", "w") as f:
                             json.dump(y.text, f, indent=4)
